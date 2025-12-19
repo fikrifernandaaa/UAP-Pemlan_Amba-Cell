@@ -16,6 +16,7 @@ public class AppTest {
     static JPanel contentPanel;
 
     static JButton btnKelola;
+    static JPanel homePanel;
 
     public static void main(String[] args) {
 
@@ -54,7 +55,7 @@ public class AppTest {
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
 
-        contentPanel.add(createPage("HALAMAN HOME"), "HOME");
+        contentPanel.add(createHomePage(), "HOME");
         contentPanel.add(createKatalogPage(), "KATALOG");
         contentPanel.add(createKeranjangPage(), "KERANJANG");
         contentPanel.add(createHistoryPage(), "HISTORY");
@@ -67,13 +68,22 @@ public class AppTest {
         btnHistory.addActionListener(e -> cardLayout.show(contentPanel, "HISTORY"));
         btnKelola.addActionListener(e -> cardLayout.show(contentPanel, "KELOLA"));
 
-        btnLogin.addActionListener(e -> showLogin(frame, btnLogin));
+        btnLogin.addActionListener(e -> {
+            if (btnLogin.getText().equals("Logout")) {
+                // LOGOUT
+                isAdmin = false;
+                btnKelola.setVisible(false);
+                btnLogin.setText("Login");
+                cardLayout.show(contentPanel, "HOME");
+                JOptionPane.showMessageDialog(frame, "Anda telah logout");
+            } else {
+                showLogin(frame, btnLogin);
+            }
+        });
 
-        /* ================= ADD ================= */
         frame.add(topBar, BorderLayout.NORTH);
         frame.add(contentPanel, BorderLayout.CENTER);
         frame.add(bottomNav, BorderLayout.SOUTH);
-
         frame.setVisible(true);
     }
 
@@ -94,12 +104,12 @@ public class AppTest {
             if (u.equals("admin") && p.equals("admin")) {
                 isAdmin = true;
                 btnKelola.setVisible(true);
-                btnLogin.setText("Admin");
+                btnLogin.setText("Logout");
                 JOptionPane.showMessageDialog(frame, "Login sebagai Admin");
             } else if (u.equals("user") && p.equals("user")) {
                 isAdmin = false;
                 btnKelola.setVisible(false);
-                btnLogin.setText("User");
+                btnLogin.setText("Logout");
                 JOptionPane.showMessageDialog(frame, "Login sebagai User");
             } else {
                 JOptionPane.showMessageDialog(frame, "Login gagal");
@@ -107,21 +117,75 @@ public class AppTest {
         }
     }
 
+    /* ================= HOME ================= */
+    private static JScrollPane createHomePage() {
+        homePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        refreshHome();
+        return new JScrollPane(homePanel);
+    }
+
+    private static void refreshHome() {
+        if (homePanel == null || katalogModel == null) return;
+
+        homePanel.removeAll();
+
+        for (int i = 0; i < katalogModel.getRowCount(); i++) {
+            ImageIcon icon = (ImageIcon) katalogModel.getValueAt(i, 3);
+            String nama = katalogModel.getValueAt(i, 1).toString();
+            String harga = katalogModel.getValueAt(i, 2).toString();
+
+            JPanel card = new JPanel(new BorderLayout());
+            card.setPreferredSize(new Dimension(150, 200));
+            card.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+
+            JLabel img = new JLabel(icon);
+            img.setHorizontalAlignment(SwingConstants.CENTER);
+
+            JLabel text = new JLabel(
+                    "<html><center>" + nama + "<br>Rp " + harga + "</center></html>",
+                    SwingConstants.CENTER
+            );
+
+            JButton btnBuy = new JButton("+ Keranjang");
+            int finalI = i;
+            btnBuy.addActionListener(e -> {
+                keranjangModel.addRow(new Object[]{
+                        katalogModel.getValueAt(finalI, 0),
+                        katalogModel.getValueAt(finalI, 1),
+                        katalogModel.getValueAt(finalI, 2)
+                });
+                JOptionPane.showMessageDialog(homePanel, "Barang masuk ke keranjang");
+            });
+
+            card.add(img, BorderLayout.CENTER);
+
+            JPanel bottom = new JPanel(new GridLayout(2,1));
+            bottom.add(text);
+            bottom.add(btnBuy);
+
+            card.add(bottom, BorderLayout.SOUTH);
+            homePanel.add(card);
+        }
+
+        homePanel.revalidate();
+        homePanel.repaint();
+    }
+
     /* ================= KATALOG ================= */
     private static JPanel createKatalogPage() {
         JPanel panel = new JPanel(new BorderLayout());
 
         katalogModel = new DefaultTableModel(
-                new Object[]{"Kode", "Nama", "Harga"}, 0
+                new Object[]{"Kode", "Nama", "Harga", "Gambar"}, 0
         );
-        katalogModel.addRow(new Object[]{"BRG01", "Pulsa 10K", "12000"});
-        katalogModel.addRow(new Object[]{"BRG02", "Pulsa 20K", "22000"});
+
+        katalogModel.addRow(new Object[]{"BRG01", "Pulsa 10K", "12000", null});
 
         JTable table = new JTable(katalogModel);
+        table.removeColumn(table.getColumnModel().getColumn(3));
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
 
         JButton btnAddCart = new JButton("+ Keranjang");
-        btnAddCart.setPreferredSize(new Dimension(160, 40));
 
         btnAddCart.addActionListener(e -> {
             int row = table.getSelectedRow();
@@ -131,14 +195,11 @@ public class AppTest {
                         katalogModel.getValueAt(row, 1),
                         katalogModel.getValueAt(row, 2)
                 });
-            } else {
-                JOptionPane.showMessageDialog(panel, "Pilih barang terlebih dahulu");
             }
         });
 
         JPanel bottom = new JPanel();
         bottom.add(btnAddCart);
-
         panel.add(bottom, BorderLayout.SOUTH);
         return panel;
     }
@@ -155,14 +216,13 @@ public class AppTest {
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
 
         JButton btnBayar = new JButton("Bayar");
-        btnBayar.setPreferredSize(new Dimension(120, 35));
+        JButton btnHapus = new JButton("Hapus");
 
         btnBayar.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row >= 0) {
                 historyModel.addRow(new Object[]{
-                        keranjangModel.getValueAt(row, 1),
-                        "Selesai"
+                        keranjangModel.getValueAt(row, 1), "Selesai"
                 });
                 keranjangModel.removeRow(row);
                 JOptionPane.showMessageDialog(panel, "Pembayaran berhasil");
@@ -171,8 +231,18 @@ public class AppTest {
             }
         });
 
+        btnHapus.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                keranjangModel.removeRow(row);
+            } else {
+                JOptionPane.showMessageDialog(panel, "Pilih barang yang ingin dihapus");
+            }
+        });
+
         JPanel bottom = new JPanel();
         bottom.add(btnBayar);
+        bottom.add(btnHapus);
 
         panel.add(bottom, BorderLayout.SOUTH);
         return panel;
@@ -202,55 +272,41 @@ public class AppTest {
         JTextField nama = new JTextField();
         JTextField harga = new JTextField();
 
-        JPanel form = new JPanel(new GridLayout(3, 2));
+        final ImageIcon[] selectedImage = {null};
+
+        JButton upload = new JButton("Upload Gambar");
+        upload.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            if (chooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
+                ImageIcon icon = new ImageIcon(chooser.getSelectedFile().getAbsolutePath());
+                Image img = icon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
+                selectedImage[0] = new ImageIcon(img);
+            }
+        });
+
+        JPanel form = new JPanel(new GridLayout(4, 2));
         form.add(new JLabel("Kode"));
         form.add(kode);
         form.add(new JLabel("Nama"));
         form.add(nama);
         form.add(new JLabel("Harga"));
         form.add(harga);
+        form.add(new JLabel("Gambar"));
+        form.add(upload);
 
         JButton add = new JButton("Input");
-        JButton update = new JButton("Update");
-        JButton delete = new JButton("Delete");
-
-        add.addActionListener(e ->
-                katalogModel.addRow(new Object[]{
-                        kode.getText(), nama.getText(), harga.getText()
-                })
-        );
-
-        update.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) {
-                katalogModel.setValueAt(kode.getText(), row, 0);
-                katalogModel.setValueAt(nama.getText(), row, 1);
-                katalogModel.setValueAt(harga.getText(), row, 2);
-            }
-        });
-
-        delete.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) katalogModel.removeRow(row);
+        add.addActionListener(e -> {
+            katalogModel.addRow(new Object[]{
+                    kode.getText(), nama.getText(), harga.getText(), selectedImage[0]
+            });
+            refreshHome();
         });
 
         JPanel action = new JPanel();
         action.add(add);
-        action.add(update);
-        action.add(delete);
 
         panel.add(form, BorderLayout.NORTH);
         panel.add(action, BorderLayout.SOUTH);
-
-        return panel;
-    }
-
-    /* ================= SIMPLE PAGE ================= */
-    private static JPanel createPage(String title) {
-        JPanel panel = new JPanel(new BorderLayout());
-        JLabel label = new JLabel(title, SwingConstants.CENTER);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        panel.add(label, BorderLayout.CENTER);
         return panel;
     }
 }
