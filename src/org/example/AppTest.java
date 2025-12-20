@@ -7,7 +7,6 @@ import java.util.List;
 
 public class AppTest {
 
-    static List<Produk> allProduk = new java.util.ArrayList<>();
     static boolean isLogin = false;
     static boolean isUser = false;
     static boolean isAdmin = false;
@@ -69,18 +68,13 @@ public class AppTest {
                 new Object[]{"Nama Barang", "Status"}, 0
         );
 
-        allProduk = JsonStorage.loadKatalog();
-
-        for (Produk p : allProduk) {
+        List<Produk> list = JsonStorage.loadKatalog();
+        for (Produk p : list) {
             katalogModel.addRow(new Object[]{
-                    p.kode,
-                    p.nama,
-                    p.harga,
-                    p.stok,
-                    resizeImage(p.gambarPath, 150, 120)
+                    p.kode, p.nama, p.harga, p.stok,
+                    new ImageIcon(p.gambarPath)
             });
         }
-
 
         /* ================= CONTENT ================= */
         cardLayout = new CardLayout();
@@ -156,6 +150,8 @@ public class AppTest {
 
                 btnKelola.setVisible(false);
                 btnLogin.setText("Logout");
+
+                KeranjangStorage.load(keranjangModel);
 
                 JOptionPane.showMessageDialog(frame,
                         "Login User berhasil\nSilakan berbelanja 😊");
@@ -278,135 +274,50 @@ public class AppTest {
     /* ================= KATALOG (GRID CARD + JUMLAH) ================= */
     private static JPanel createKatalogPage() {
         katalogPanel = new JPanel(new BorderLayout());
-
-        JPanel topFilter = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-        JTextField txtSearch = new JTextField(10);
-        JTextField txtMin = new JTextField(6);
-        JTextField txtMax = new JTextField(6);
-
-        JButton btnSearch = new JButton("Search");
-        JButton btnSort = new JButton("Filter Harga");
-        JButton btnReset = new JButton("Reset");
-
-        topFilter.add(new JLabel("Cari:"));
-        topFilter.add(txtSearch);
-        topFilter.add(btnSearch);
-
-        topFilter.add(new JLabel("Min:"));
-        topFilter.add(txtMin);
-        topFilter.add(new JLabel("Max:"));
-        topFilter.add(txtMax);
-        topFilter.add(btnSort);
-        topFilter.add(btnReset);
-        katalogPanel.add(topFilter, BorderLayout.NORTH);
-
-        // 🔍 SEARCH
-        btnSearch.addActionListener(e -> {
-            searchProduk(txtSearch.getText());
-        });
-
-        // 💰 SORT / FILTER HARGA
-        btnSort.addActionListener(e -> {
-            filterHarga(txtMin.getText(), txtMax.getText());
-        });
-
-        // 🔄 RESET
-        btnReset.addActionListener(e -> {
-            loadToTable(allProduk);
-        });
-
         refreshKatalog();
         return katalogPanel;
     }
 
-    private static void loadToTable(List<Produk> allProduk) {
-    }
-
-    private static void searchProduk(String keyword) {
-        katalogModel.setRowCount(0);
-        boolean ditemukan = false;
-
-        for (Produk p : allProduk) {
-            if (p.nama.toLowerCase().contains(keyword.toLowerCase())) {
-                katalogModel.addRow(new Object[]{
-                        p.kode,
-                        p.nama,
-                        p.harga,
-                        p.stok,
-                        resizeImage(p.gambarPath, 150, 120)
-                });
-                ditemukan = true;
-            }
-        }
-
-        if (!ditemukan) {
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Barang tidak ditemukan",
-                    "Search",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-        }
-
-        refreshKatalog();
-    }
-
-    private static void filterHarga(String minText, String maxText) {
-        try {
-            int min = Integer.parseInt(minText);
-            int max = Integer.parseInt(maxText);
-
-            katalogModel.setRowCount(0);
-            boolean ditemukan = false;
-
-            for (Produk p : allProduk) {
-                int harga = Integer.parseInt(p.harga);
-
-                if (harga >= min && harga <= max) {
-                    katalogModel.addRow(new Object[]{
-                            p.kode,
-                            p.nama,
-                            p.harga,
-                            p.stok,
-                            resizeImage(p.gambarPath, 150, 120)
-                    });
-                    ditemukan = true;
-                }
-            }
-
-            if (!ditemukan) {
-                JOptionPane.showMessageDialog(
-                        null,
-                        "Barang dengan harga tersebut tidak tersedia",
-                        "Filter Harga",
-                        JOptionPane.WARNING_MESSAGE
-                );
-            }
-
-            refreshKatalog();
-
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Input harga harus berupa angka!",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
-        }
-    }
+    static JTextField txtSearch;
+    static String keywordSearch = "";
 
 
     private static void refreshKatalog() {
+        katalogPanel.removeAll();
 
+        /* ================= SEARCH BAR ================= */
+        JPanel topFilter = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        txtSearch = new JTextField(12);
+        JButton btnCari = new JButton("Cari");
+        JButton btnReset = new JButton("Reset");
+
+        topFilter.add(new JLabel("Cari Barang:"));
+        topFilter.add(txtSearch);
+        topFilter.add(btnCari);
+        topFilter.add(btnReset);
+
+        katalogPanel.add(topFilter, BorderLayout.NORTH);
+
+        /* ================= GRID ================= */
         JPanel grid = new JPanel(new GridLayout(0, 2, 10, 10));
         grid.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        boolean ditemukan = false;
+
         for (int i = 0; i < katalogModel.getRowCount(); i++) {
+
+            String nama = katalogModel.getValueAt(i, 1).toString().toLowerCase();
+
+            // FILTER SEARCH
+            if (!keywordSearch.isEmpty() && !nama.contains(keywordSearch)) {
+                continue;
+            }
+
+            ditemukan = true;
 
             int row = i;
             String kode = katalogModel.getValueAt(i, 0).toString();
-            String nama = katalogModel.getValueAt(i, 1).toString();
             String harga = katalogModel.getValueAt(i, 2).toString();
             int stok = (int) katalogModel.getValueAt(i, 3);
             ImageIcon img = (ImageIcon) katalogModel.getValueAt(i, 4);
@@ -420,7 +331,9 @@ public class AppTest {
             JLabel lblInfo = new JLabel("<html><b>" + nama + "</b><br>Rp " +
                     harga + "<br>Stok: " + stok + "</html>");
 
-            JSpinner qty = new JSpinner(new SpinnerNumberModel(1, 1, Math.max(1, stok), 1));
+            JSpinner qty = new JSpinner(
+                    new SpinnerNumberModel(1, 1, Math.max(1, stok), 1)
+            );
             qty.setEnabled(stok > 0);
 
             JButton btnCart = new JButton("+ Keranjang");
@@ -428,36 +341,34 @@ public class AppTest {
 
             btnCart.addActionListener(e -> {
 
-                // BELUM LOGIN
                 if (!isLogin) {
                     JOptionPane.showMessageDialog(null,
-                            "Silakan login sebagai USER terlebih dahulu untuk menambahkan ke keranjang",
+                            "Silakan login sebagai USER terlebih dahulu",
                             "Belum Login",
                             JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
-                // ADMIN DILARANG BELANJA
                 if (isAdmin) {
                     JOptionPane.showMessageDialog(null,
-                            "Admin tidak diperbolehkan menambahkan barang ke keranjang",
+                            "Admin tidak diperbolehkan berbelanja",
                             "Akses Ditolak",
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
-                // HANYA USER
                 int jumlah = (int) qty.getValue();
 
                 keranjangModel.addRow(new Object[]{
                         kode, nama, harga, jumlah, img
                 });
 
+                KeranjangStorage.save(keranjangModel);
                 katalogModel.setValueAt(stok - jumlah, row, 3);
                 refreshHome();
                 refreshKatalog();
+                saveKatalogToJson();
             });
-
 
             JPanel bottom = new JPanel(new GridLayout(2, 1));
             bottom.add(qty);
@@ -470,9 +381,29 @@ public class AppTest {
             grid.add(card);
         }
 
+        // JIKA TIDAK DITEMUKAN
+        if (!keywordSearch.isEmpty() && !ditemukan) {
+            JOptionPane.showMessageDialog(null,
+                    "Barang tidak tersedia",
+                    "Pencarian",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+
         JScrollPane scroll = new JScrollPane(grid);
         scroll.setBorder(null);
         katalogPanel.add(scroll, BorderLayout.CENTER);
+
+        /* ================= EVENT ================= */
+        btnCari.addActionListener(e -> {
+            keywordSearch = txtSearch.getText().trim().toLowerCase();
+            refreshKatalog();
+        });
+
+        btnReset.addActionListener(e -> {
+            keywordSearch = "";
+            txtSearch.setText("");
+            refreshKatalog();
+        });
 
         katalogPanel.revalidate();
         katalogPanel.repaint();
@@ -507,6 +438,7 @@ public class AppTest {
                         keranjangModel.getValueAt(r, 1), "Selesai"
                 });
                 keranjangModel.removeRow(r);
+                KeranjangStorage.save(keranjangModel);
             }
         });
 
@@ -526,8 +458,11 @@ public class AppTest {
                 }
 
                 keranjangModel.removeRow(r);
+                KeranjangStorage.save(keranjangModel);
+
                 refreshHome();
                 refreshKatalog();
+                saveKatalogToJson();
             }
         });
 
@@ -568,22 +503,18 @@ public class AppTest {
     }
 
     /* ================= KELOLA ADMIN (CRUD) ================= */
-    /* ================= KELOLA ADMIN (CRUD) ================= */
     private static JPanel createKelolaPage() {
         JPanel panel = new JPanel(new BorderLayout());
 
-        // TABLE
         JTable table = new JTable(katalogModel);
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // FORM INPUT
         JTextField kode = new JTextField();
         JTextField nama = new JTextField();
         JTextField harga = new JTextField();
         JTextField stok = new JTextField();
         final ImageIcon[] img = {null};
 
-        // AMBIL DATA SAAT BARIS DIPILIH
         table.getSelectionModel().addListSelectionListener(e -> {
             int r = table.getSelectedRow();
             if (r >= 0) {
@@ -595,85 +526,93 @@ public class AppTest {
             }
         });
 
-        // UPLOAD GAMBAR
         JButton upload = new JButton("Upload");
         upload.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
             if (fc.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
                 String path = fc.getSelectedFile().getAbsolutePath();
+
+                ImageIcon icon = new ImageIcon(
+                        new ImageIcon(path)
+                                .getImage()
+                                .getScaledInstance(150, 120, Image.SCALE_SMOOTH)
+                );
+                icon.setDescription(path);
+
                 img[0] = resizeImage(path, 150, 120);
+
             }
         });
 
-        // FORM PANEL
-        JPanel form = new JPanel(new GridLayout(5, 2, 5, 5));
-        form.add(new JLabel("Kode"));   form.add(kode);
-        form.add(new JLabel("Nama"));   form.add(nama);
-        form.add(new JLabel("Harga"));  form.add(harga);
-        form.add(new JLabel("Stok"));   form.add(stok);
+        JPanel form = new JPanel(new GridLayout(5, 2));
+        form.add(new JLabel("Kode")); form.add(kode);
+        form.add(new JLabel("Nama")); form.add(nama);
+        form.add(new JLabel("Harga")); form.add(harga);
+        form.add(new JLabel("Stok")); form.add(stok);
         form.add(new JLabel("Gambar")); form.add(upload);
 
-        panel.add(form, BorderLayout.NORTH);
-
-        // BUTTON
         JButton add = new JButton("Input");
         JButton update = new JButton("Update");
         JButton delete = new JButton("Delete");
 
-        // ================= INPUT =================
         add.addActionListener(e -> {
             try {
                 int stokValue = Integer.parseInt(stok.getText());
-                Integer.parseInt(harga.getText()); // validasi angka
+                String hargaText = harga.getText();
+
+                if (!hargaText.matches("[0-9.]+")){
+                    throw new NumberFormatException("Harga Tidak Valid");
+                }
 
                 katalogModel.addRow(new Object[]{
                         kode.getText(),
                         nama.getText(),
-                        harga.getText(),
+                        hargaText,   // SIMPAN STRING
                         stokValue,
                         img[0]
                 });
-
-                refreshHome();
-                saveKatalogToJson();
-                refreshKatalog();
 
                 JOptionPane.showMessageDialog(panel, "Data berhasil ditambahkan");
 
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(
                         panel,
-                        "Harga dan Stok harus berupa ANGKA!",
+                        "Harga dan stok HARUS angka!",
                         "Input Error",
                         JOptionPane.ERROR_MESSAGE
                 );
             }
         });
 
-        // ================= UPDATE =================
         update.addActionListener(e -> {
             int r = table.getSelectedRow();
             if (r >= 0) {
                 try {
+                    // STOK wajib angka
                     int stokValue = Integer.parseInt(stok.getText());
-                    Integer.parseInt(harga.getText());
+
+                    // HARGA boleh angka + titik
+                    String hargaText = harga.getText();
+                    if (!hargaText.matches("^[0-9.]+$")) {
+                        throw new NumberFormatException("Harga tidak valid");
+                    }
 
                     katalogModel.setValueAt(kode.getText(), r, 0);
                     katalogModel.setValueAt(nama.getText(), r, 1);
-                    katalogModel.setValueAt(harga.getText(), r, 2);
+                    katalogModel.setValueAt(hargaText, r, 2);
                     katalogModel.setValueAt(stokValue, r, 3);
                     katalogModel.setValueAt(img[0], r, 4);
 
                     refreshHome();
-                    saveKatalogToJson();
                     refreshKatalog();
+                    saveKatalogToJson();
 
                     JOptionPane.showMessageDialog(panel, "Data berhasil diupdate");
 
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(
                             panel,
-                            "Harga dan Stok harus berupa ANGKA!",
+                            "Harga dan stok HARUS berupa ANGKA!",
                             "Update Error",
                             JOptionPane.ERROR_MESSAGE
                     );
@@ -683,38 +622,26 @@ public class AppTest {
             }
         });
 
-        // ================= DELETE =================
         delete.addActionListener(e -> {
             int r = table.getSelectedRow();
             if (r >= 0) {
-                int confirm = JOptionPane.showConfirmDialog(
-                        panel,
-                        "Yakin ingin menghapus data?",
-                        "Konfirmasi",
-                        JOptionPane.YES_NO_OPTION
-                );
-
-                if (confirm == JOptionPane.YES_OPTION) {
-                    katalogModel.removeRow(r);
-                    refreshHome();
-                    saveKatalogToJson();
-                    refreshKatalog();
-                }
-            } else {
-                JOptionPane.showMessageDialog(panel, "Pilih data terlebih dahulu");
+                katalogModel.removeRow(r);
+                refreshHome();
+                saveKatalogToJson();
+                refreshKatalog();
             }
         });
 
-        JPanel btnPanel = new JPanel();
-        btnPanel.add(add);
-        btnPanel.add(update);
-        btnPanel.add(delete);
+        JPanel btn = new JPanel();
+        btn.add(add);
+        btn.add(update);
+        btn.add(delete);
 
-        panel.add(btnPanel, BorderLayout.SOUTH);
+        panel.add(form, BorderLayout.NORTH);
+        panel.add(btn, BorderLayout.SOUTH);
 
         return panel;
     }
-
     //===json===
     private static void saveKatalogToJson() {
         java.util.List<Produk> list = new java.util.ArrayList<>();
@@ -743,4 +670,8 @@ public class AppTest {
         resized.setDescription(path); // penting buat JSON
         return resized;
     }
+
+
+
+
 }
