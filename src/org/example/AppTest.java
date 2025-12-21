@@ -80,7 +80,7 @@ public class AppTest {
         /* ================= BOTTOM NAV (MODERN) ================= */
         JPanel bottomNav = new JPanel(new GridLayout(1, 4, 1, 0));
         bottomNav.setPreferredSize(new Dimension(0, 65));
-        bottomNav.setBackground(Color.WHITE);
+        bottomNav.setBackground(Color.BLACK);
         bottomNav.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, new Color(224, 224, 224)));
 
         JButton btnHome = createNavButton("🏠", "Home");
@@ -178,7 +178,7 @@ public class AppTest {
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setPreferredSize(new Dimension(100, 35));
+        btn.setPreferredSize(new Dimension(75, 35));
 
         // Hover effect
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -194,16 +194,42 @@ public class AppTest {
     }
 
     /* ================= NAV BUTTON CREATOR ================= */
-    private static JButton createNavButton(String icon, String text) {
-        JButton btn = new JButton("<html><center>" + icon + "<br><small>" + text + "</small></center></html>");
-        btn.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-        btn.setForeground(new Color(120, 120, 120));
-        btn.setBackground(Color.WHITE);
+    private static JButton createNavButton(String iconText, String text) {
+
+        // Panel isi tombol
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setOpaque(false);
+
+        // ICON (emoji / logo)
+        JLabel icon = new JLabel(iconText, SwingConstants.CENTER);
+        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
+        icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // TEXT
+        JLabel label = new JLabel(text, SwingConstants.CENTER);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        label.setForeground(Color.BLACK);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        panel.add(Box.createVerticalStrut(4));
+        panel.add(icon);
+        panel.add(Box.createVerticalStrut(2));
+        panel.add(label);
+
+        JButton btn = new JButton();
+        btn.setLayout(new BorderLayout());
+        btn.add(panel, BorderLayout.CENTER);
+
+        btn.setBackground(new Color(200, 200, 200));
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setPreferredSize(new Dimension(100, 65));
+
         return btn;
     }
+
 
     /* ================= HIGHLIGHT NAV ================= */
     private static void highlightNavButton(JButton active, JButton... others) {
@@ -444,25 +470,53 @@ public class AppTest {
 
     static JTextField txtSearch;
     static String keywordSearch = "";
+    static int selectedSort = 0; // 0=default, 1=termurah, 2=termahal
 
     private static void refreshKatalog() {
         katalogPanel.removeAll();
 
-        /* ================= MODERN SEARCH BAR ================= */
-        JPanel topFilter = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        /* ================= MODERN SEARCH + SORT BAR ================= */
+        JPanel topFilter = new JPanel(new BorderLayout());
         topFilter.setBackground(Color.WHITE);
         topFilter.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(224, 224, 224)));
 
-        txtSearch = new JTextField(15);
-        txtSearch.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        // LEFT (SEARCH)
+        JPanel leftFilter = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        leftFilter.setOpaque(false);
+
+        txtSearch = new JTextField(10);
+        txtSearch.setFont(new Font("Segoe UI", Font.PLAIN, 10));
 
         JButton btnCari = createModernButton("🔍 Cari", PRIMARY_COLOR);
         JButton btnReset = createModernButton("🔄 Reset", new Color(120, 120, 120));
 
-        topFilter.add(new JLabel("🔎"));
-        topFilter.add(txtSearch);
-        topFilter.add(btnCari);
-        topFilter.add(btnReset);
+        leftFilter.add(new JLabel("🔎"));
+        leftFilter.add(txtSearch);
+        leftFilter.add(btnCari);
+        leftFilter.add(btnReset);
+
+        // RIGHT (SORTING)
+        JPanel rightFilter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        rightFilter.setOpaque(false);
+
+        JComboBox<String> cbSort = new JComboBox<>(new String[]{
+                "↕️ Urutkan Harga",
+                "⬆️ Termurah",
+                "⬇️ Termahal"
+        });
+        cbSort.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbSort.setPreferredSize(new Dimension(90, 30));
+        cbSort.setSelectedIndex(selectedSort); // 🔥 penting
+
+        cbSort.addActionListener(e -> {
+            selectedSort = cbSort.getSelectedIndex();
+            refreshKatalog();
+        });
+
+        rightFilter.add(cbSort);
+
+        topFilter.add(leftFilter, BorderLayout.WEST);
+        topFilter.add(rightFilter, BorderLayout.EAST);
 
         katalogPanel.add(topFilter, BorderLayout.NORTH);
 
@@ -473,8 +527,38 @@ public class AppTest {
 
         boolean ditemukan = false;
 
+        // ====== BUAT LIST INDEX UNTUK SORTING ======
+        java.util.List<Integer> indexList = new java.util.ArrayList<>();
         for (int i = 0; i < katalogModel.getRowCount(); i++) {
-            String nama = katalogModel.getValueAt(i, 1).toString().toLowerCase();
+            indexList.add(i);
+        }
+
+        if (selectedSort == 1) { // ⬆️ Termurah
+            indexList.sort((a, b) -> {
+                double ha = Double.parseDouble(
+                        katalogModel.getValueAt(a, 2).toString().replace(".", "")
+                );
+                double hb = Double.parseDouble(
+                        katalogModel.getValueAt(b, 2).toString().replace(".", "")
+                );
+                return Double.compare(ha, hb);
+            });
+        }
+        else if (selectedSort == 2) { // ⬇️ Termahal
+            indexList.sort((a, b) -> {
+                double ha = Double.parseDouble(
+                        katalogModel.getValueAt(a, 2).toString().replace(".", "")
+                );
+                double hb = Double.parseDouble(
+                        katalogModel.getValueAt(b, 2).toString().replace(".", "")
+                );
+                return Double.compare(hb, ha);
+            });
+        }
+
+        // ====== TAMPILKAN DATA ======
+        for (int idx : indexList) {
+            String nama = katalogModel.getValueAt(idx, 1).toString().toLowerCase();
 
             if (!keywordSearch.isEmpty() && !nama.contains(keywordSearch)) {
                 continue;
@@ -482,13 +566,12 @@ public class AppTest {
 
             ditemukan = true;
 
-            int row = i;
-            String kode = katalogModel.getValueAt(i, 0).toString();
-            String harga = katalogModel.getValueAt(i, 2).toString();
-            int stok = (int) katalogModel.getValueAt(i, 3);
-            ImageIcon img = (ImageIcon) katalogModel.getValueAt(i, 4);
+            int row = idx;
+            String kode = katalogModel.getValueAt(idx, 0).toString();
+            String harga = katalogModel.getValueAt(idx, 2).toString();
+            int stok = (int) katalogModel.getValueAt(idx, 3);
+            ImageIcon img = (ImageIcon) katalogModel.getValueAt(idx, 4);
 
-            // 🎨 MODERN PRODUCT CARD
             JPanel card = new JPanel(new BorderLayout(5, 5));
             card.setBackground(CARD_BG);
             card.setBorder(BorderFactory.createCompoundBorder(
@@ -504,15 +587,12 @@ public class AppTest {
                     "</span><br><span style='font-size:10px; color:" +
                     (stok > 0 ? "#4CAF50" : "#F44336") + ";'>Stok: " + stok +
                     "</span></html>");
-            lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
 
             JSpinner qty = new JSpinner(new SpinnerNumberModel(1, 1, Math.max(1, stok), 1));
             qty.setEnabled(stok > 0);
-            qty.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
             JButton btnCart = createModernButton("🛒 Tambah", SUCCESS_COLOR);
             btnCart.setEnabled(stok > 0);
-            btnCart.setPreferredSize(new Dimension(120, 30));
 
             btnCart.addActionListener(e -> {
                 if (!isLogin) {
@@ -565,6 +645,8 @@ public class AppTest {
         scroll.getViewport().setBackground(BG_COLOR);
         katalogPanel.add(scroll, BorderLayout.CENTER);
 
+
+        // ====== ACTION ======
         btnCari.addActionListener(e -> {
             keywordSearch = txtSearch.getText().trim().toLowerCase();
             refreshKatalog();
@@ -575,6 +657,8 @@ public class AppTest {
             txtSearch.setText("");
             refreshKatalog();
         });
+
+        cbSort.addActionListener(e -> refreshKatalog());
 
         katalogPanel.revalidate();
         katalogPanel.repaint();
