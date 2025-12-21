@@ -330,15 +330,15 @@ public class AppTest {
         banner.setPreferredSize(new Dimension(0, 140));
         banner.setLayout(new BoxLayout(banner, BoxLayout.Y_AXIS));
 
-        JLabel title = new JLabel("Amba Cell");
+        JLabel title = new JLabel("AMBA CELL");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.setForeground(Color.WHITE);
-        title.setFont(new Font("Futura Md BT", Font.BOLD, 36));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 36));
 
-        JLabel slogan = new JLabel("''Solusi Genggaman Anda''");
+        JLabel slogan = new JLabel("Premium Smartphone - Best Price Guarantee");
         slogan.setAlignmentX(Component.CENTER_ALIGNMENT);
         slogan.setForeground(Color.WHITE);
-        slogan.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+        slogan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
         JLabel emoji = new JLabel("📱 💎 🔥");
         emoji.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -418,7 +418,7 @@ public class AppTest {
             lblNama.setForeground(TEXT_COLOR);
 
             JLabel lblHarga = new JLabel("Rp " + harga, SwingConstants.CENTER);
-            lblHarga.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            lblHarga.setFont(new Font("Segoe UI", Font.PLAIN, 11));
             lblHarga.setForeground(ACCENT_COLOR);
 
             JLabel lblStok = new JLabel("Stok: " + stok, SwingConstants.CENTER);
