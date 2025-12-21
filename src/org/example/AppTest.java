@@ -22,33 +22,71 @@ public class AppTest {
 
     static JButton btnKelola;
 
+    // 🎨 MODERN COLOR PALETTE
+    static final Color PRIMARY_COLOR = new Color(25, 118, 210);      // Blue
+    static final Color SECONDARY_COLOR = new Color(66, 165, 245);    // Light Blue
+    static final Color ACCENT_COLOR = new Color(255, 152, 0);        // Orange
+    static final Color SUCCESS_COLOR = new Color(76, 175, 80);       // Green
+    static final Color DANGER_COLOR = new Color(244, 67, 54);        // Red
+    static final Color BG_COLOR = new Color(250, 250, 250);          // Light Gray
+    static final Color CARD_BG = Color.WHITE;
+    static final Color TEXT_COLOR = new Color(33, 33, 33);
+
     public static void main(String[] args) {
 
-        JFrame frame = new JFrame("Amba Cell");
-        frame.setSize(400, 750);
+        // Set Look and Feel Modern
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        JFrame frame = new JFrame("Amba Cell - Premium Phone Store");
+        frame.setSize(420, 750);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setLayout(new BorderLayout());
 
-        /* ================= TOP BAR ================= */
+        /* ================= TOP BAR (MODERN) ================= */
         JPanel topBar = new JPanel(new BorderLayout());
-        topBar.setPreferredSize(new Dimension(0, 45));
+        topBar.setPreferredSize(new Dimension(0, 55));
+        topBar.setBackground(PRIMARY_COLOR);
+        topBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        JButton btnLogin = new JButton("Login");
-        btnKelola = new JButton("Kelola");
+        // Logo & Title
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        leftPanel.setOpaque(false);
+        JLabel logo = new JLabel("📱");
+        logo.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24));
+        JLabel title = new JLabel("Amba Cell");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        title.setForeground(Color.WHITE);
+        leftPanel.add(logo);
+        leftPanel.add(title);
+
+        // Buttons
+        JButton btnLogin = createModernButton("🔐 Login", SECONDARY_COLOR);
+        btnKelola = createModernButton("⚙️ Kelola", ACCENT_COLOR);
         btnKelola.setVisible(false);
 
-        topBar.add(btnLogin, BorderLayout.WEST);
-        topBar.add(btnKelola, BorderLayout.EAST);
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
+        rightPanel.setOpaque(false);
+        rightPanel.add(btnLogin);
+        rightPanel.add(btnKelola);
 
-        /* ================= BOTTOM NAV ================= */
-        JPanel bottomNav = new JPanel(new GridLayout(1, 4));
-        bottomNav.setPreferredSize(new Dimension(0, 60));
+        topBar.add(leftPanel, BorderLayout.WEST);
+        topBar.add(rightPanel, BorderLayout.EAST);
 
-        JButton btnHome = new JButton("Home");
-        JButton btnKatalog = new JButton("Katalog");
-        JButton btnKeranjang = new JButton("Keranjang");
-        JButton btnHistory = new JButton("History");
+        /* ================= BOTTOM NAV (MODERN) ================= */
+        JPanel bottomNav = new JPanel(new GridLayout(1, 4, 1, 0));
+        bottomNav.setPreferredSize(new Dimension(0, 65));
+        bottomNav.setBackground(Color.WHITE);
+        bottomNav.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, new Color(224, 224, 224)));
+
+        JButton btnHome = createNavButton("🏠", "Home");
+        JButton btnKatalog = createNavButton("📦", "Katalog");
+        JButton btnKeranjang = createNavButton("🛒", "Keranjang");
+        JButton btnHistory = createNavButton("📋", "History");
 
         bottomNav.add(btnHome);
         bottomNav.add(btnKatalog);
@@ -79,6 +117,7 @@ public class AppTest {
         /* ================= CONTENT ================= */
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
+        contentPanel.setBackground(BG_COLOR);
 
         contentPanel.add(createHomePage(), "HOME");
         contentPanel.add(createKatalogPage(), "KATALOG");
@@ -86,27 +125,39 @@ public class AppTest {
         contentPanel.add(createHistoryPage(), "HISTORY");
         contentPanel.add(createKelolaPage(), "KELOLA");
 
-        btnHome.addActionListener(e -> cardLayout.show(contentPanel, "HOME"));
-        btnKatalog.addActionListener(e -> cardLayout.show(contentPanel, "KATALOG"));
-        btnKeranjang.addActionListener(e -> cardLayout.show(contentPanel, "KERANJANG"));
-        btnHistory.addActionListener(e -> cardLayout.show(contentPanel, "HISTORY"));
+        btnHome.addActionListener(e -> {
+            cardLayout.show(contentPanel, "HOME");
+            highlightNavButton(btnHome, btnKatalog, btnKeranjang, btnHistory);
+        });
+        btnKatalog.addActionListener(e -> {
+            cardLayout.show(contentPanel, "KATALOG");
+            highlightNavButton(btnKatalog, btnHome, btnKeranjang, btnHistory);
+        });
+        btnKeranjang.addActionListener(e -> {
+            cardLayout.show(contentPanel, "KERANJANG");
+            highlightNavButton(btnKeranjang, btnHome, btnKatalog, btnHistory);
+        });
+        btnHistory.addActionListener(e -> {
+            cardLayout.show(contentPanel, "HISTORY");
+            highlightNavButton(btnHistory, btnHome, btnKatalog, btnKeranjang);
+        });
         btnKelola.addActionListener(e -> cardLayout.show(contentPanel, "KELOLA"));
 
         btnLogin.addActionListener(e -> {
-            if (btnLogin.getText().equals("Logout")) {
+            if (btnLogin.getText().contains("Logout")) {
                 isLogin = false;
                 isAdmin = false;
                 isUser = false;
 
                 btnKelola.setVisible(false);
-                btnLogin.setText("Login");
+                btnLogin.setText("🔐 Login");
+                btnLogin.setBackground(SECONDARY_COLOR);
 
                 cardLayout.show(contentPanel, "HOME");
             } else {
                 showLogin(frame, btnLogin);
             }
         });
-
 
         frame.add(topBar, BorderLayout.NORTH);
         frame.add(contentPanel, BorderLayout.CENTER);
@@ -115,20 +166,73 @@ public class AppTest {
 
         refreshHome();
         refreshKatalog();
+        highlightNavButton(btnHome, btnKatalog, btnKeranjang, btnHistory);
     }
 
+    /* ================= MODERN BUTTON CREATOR ================= */
+    private static JButton createModernButton(String text, Color bgColor) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(bgColor);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setPreferredSize(new Dimension(100, 35));
 
+        // Hover effect
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(bgColor.brighter());
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(bgColor);
+            }
+        });
 
-    /* ================= LOGIN ================= */
+        return btn;
+    }
+
+    /* ================= NAV BUTTON CREATOR ================= */
+    private static JButton createNavButton(String icon, String text) {
+        JButton btn = new JButton("<html><center>" + icon + "<br><small>" + text + "</small></center></html>");
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        btn.setForeground(new Color(120, 120, 120));
+        btn.setBackground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    /* ================= HIGHLIGHT NAV ================= */
+    private static void highlightNavButton(JButton active, JButton... others) {
+        active.setForeground(PRIMARY_COLOR);
+        for (JButton btn : others) {
+            btn.setForeground(new Color(120, 120, 120));
+        }
+    }
+
+    /* ================= LOGIN (MODERN) ================= */
     private static void showLogin(JFrame frame, JButton btnLogin) {
+        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         JTextField u = new JTextField();
         JPasswordField p = new JPasswordField();
 
-        Object[] msg = {"Username:", u, "Password:", p};
+        u.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        p.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        if (JOptionPane.showConfirmDialog(frame, msg, "Login",
-                JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+        panel.add(new JLabel("Username:"));
+        panel.add(u);
+        panel.add(new JLabel("Password:"));
+        panel.add(p);
 
+        int result = JOptionPane.showConfirmDialog(frame, panel, "🔐 Login",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
             String user = u.getText();
             String pass = new String(p.getPassword());
 
@@ -138,10 +242,11 @@ public class AppTest {
                 isUser = false;
 
                 btnKelola.setVisible(true);
-                btnLogin.setText("Logout");
+                btnLogin.setText("🚪 Logout");
+                btnLogin.setBackground(DANGER_COLOR);
 
-                JOptionPane.showMessageDialog(frame,
-                        "Login Admin berhasil\nAdmin hanya dapat mengelola barang");
+                showModernMessage(frame, "✅ Login Berhasil",
+                        "Selamat datang Admin!\nAnda dapat mengelola barang.", SUCCESS_COLOR);
 
             } else if (user.equals("user") && pass.equals("user")) {
                 isLogin = true;
@@ -149,78 +254,109 @@ public class AppTest {
                 isUser = true;
 
                 btnKelola.setVisible(false);
-                btnLogin.setText("Logout");
+                btnLogin.setText("🚪 Logout");
+                btnLogin.setBackground(DANGER_COLOR);
 
                 KeranjangStorage.load(keranjangModel);
 
-                JOptionPane.showMessageDialog(frame,
-                        "Login User berhasil\nSilakan berbelanja 😊");
+                showModernMessage(frame, "✅ Login Berhasil",
+                        "Selamat datang User!\nSilakan berbelanja 🛒", SUCCESS_COLOR);
 
             } else {
-                JOptionPane.showMessageDialog(frame, "Login gagal");
+                showModernMessage(frame, "❌ Login Gagal",
+                        "Username atau password salah!", DANGER_COLOR);
             }
         }
     }
 
-    /* ================= HOME (GRID CARD) ================= */
+    /* ================= MODERN MESSAGE DIALOG ================= */
+    private static void showModernMessage(JFrame frame, String title, String message, Color color) {
+        JOptionPane pane = new JOptionPane(
+                message,
+                JOptionPane.INFORMATION_MESSAGE,
+                JOptionPane.DEFAULT_OPTION,
+                null,
+                new Object[]{},
+                null
+        );
+
+        JDialog dialog = pane.createDialog(frame, title);
+        dialog.getContentPane().setBackground(color);
+
+        Timer timer = new Timer(2000, e -> dialog.dispose());
+        timer.setRepeats(false);
+        timer.start();
+
+        dialog.setVisible(true);
+    }
+
+    /* ================= HOME (MODERN BANNER) ================= */
     static JPanel homePanelTop;
     static JPanel homePanelBottom;
 
     private static JPanel createHomePage() {
-
         JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(BG_COLOR);
 
-        /* ================= BANNER (FIXED) ================= */
+        /* ================= MODERN BANNER ================= */
         JPanel banner = new JPanel();
-        banner.setBackground(new Color(33, 150, 243));
-        banner.setPreferredSize(new Dimension(0, 120));
+        banner.setBackground(new Color(66, 165, 245));
+        banner.setPreferredSize(new Dimension(0, 140));
         banner.setLayout(new BoxLayout(banner, BoxLayout.Y_AXIS));
 
         JLabel title = new JLabel("AMBA CELL");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        title.setForeground(Color.black);
-        title.setFont(new Font("Forte", Font.BOLD, 30));
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 36));
 
-        JLabel slogan = new JLabel("Solusi genggaman anda loh yah");
+        JLabel slogan = new JLabel("Premium Smartphone - Best Price Guarantee");
         slogan.setAlignmentX(Component.CENTER_ALIGNMENT);
         slogan.setForeground(Color.WHITE);
-        slogan.setFont(new Font("Arial", Font.BOLD, 14));
+        slogan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JLabel emoji = new JLabel("📱 💎 🔥");
+        emoji.setAlignmentX(Component.CENTER_ALIGNMENT);
+        emoji.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
 
         banner.add(Box.createVerticalGlue());
         banner.add(title);
         banner.add(Box.createRigidArea(new Dimension(0, 5)));
         banner.add(slogan);
+        banner.add(Box.createRigidArea(new Dimension(0, 5)));
+        banner.add(emoji);
         banner.add(Box.createVerticalGlue());
 
         /* ================= CONTAINER PRODUK ================= */
         JPanel productContainer = new JPanel();
         productContainer.setLayout(new BoxLayout(productContainer, BoxLayout.Y_AXIS));
+        productContainer.setBackground(BG_COLOR);
 
-        homePanelTop = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        homePanelBottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        homePanelTop = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
+        homePanelTop.setBackground(BG_COLOR);
+        homePanelBottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
+        homePanelBottom.setBackground(BG_COLOR);
 
         JScrollPane scrollTop = new JScrollPane(
                 homePanelTop,
                 JScrollPane.VERTICAL_SCROLLBAR_NEVER,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
         );
+        scrollTop.setBorder(null);
+        scrollTop.getViewport().setBackground(BG_COLOR);
 
         JScrollPane scrollBottom = new JScrollPane(
                 homePanelBottom,
                 JScrollPane.VERTICAL_SCROLLBAR_NEVER,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
         );
-
-        scrollTop.setBorder(null);
         scrollBottom.setBorder(null);
+        scrollBottom.getViewport().setBackground(BG_COLOR);
 
         productContainer.add(scrollTop);
         productContainer.add(scrollBottom);
 
         mainPanel.add(banner, BorderLayout.NORTH);
         mainPanel.add(productContainer, BorderLayout.CENTER);
-
-        refreshHome();
 
         return mainPanel;
     }
@@ -237,21 +373,48 @@ public class AppTest {
         for (int i = 0; i < katalogModel.getRowCount(); i++) {
             ImageIcon icon = (ImageIcon) katalogModel.getValueAt(i, 4);
             int stok = (int) katalogModel.getValueAt(i, 3);
+            String nama = katalogModel.getValueAt(i, 1).toString();
+            String harga = katalogModel.getValueAt(i, 2).toString();
 
-            JPanel card = new JPanel(new BorderLayout());
-            card.setPreferredSize(new Dimension(150, 200));
-            card.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            // 🎨 MODERN PRODUCT CARD
+            JPanel card = new JPanel(new BorderLayout(5, 5));
+            card.setPreferredSize(new Dimension(165, 220));
+            card.setBackground(CARD_BG);
+            card.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(224, 224, 224), 1),
+                    BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            ));
 
             JLabel img = new JLabel(icon, SwingConstants.CENTER);
 
-            JLabel text = new JLabel("<html><center>" +
-                    katalogModel.getValueAt(i, 1) +
-                    "<br>Rp " + katalogModel.getValueAt(i, 2) +
-                    "<br>Stok: " + stok +
-                    "</center></html>", SwingConstants.CENTER);
+            JLabel lblNama = new JLabel("<html><b>" + nama + "</b></html>", SwingConstants.CENTER);
+            lblNama.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            lblNama.setForeground(TEXT_COLOR);
+
+            JLabel lblHarga = new JLabel("Rp " + harga, SwingConstants.CENTER);
+            lblHarga.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            lblHarga.setForeground(ACCENT_COLOR);
+
+            JLabel lblStok = new JLabel("Stok: " + stok, SwingConstants.CENTER);
+            lblStok.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+            lblStok.setForeground(stok > 0 ? SUCCESS_COLOR : DANGER_COLOR);
+
+            JPanel infoPanel = new JPanel();
+            infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+            infoPanel.setBackground(CARD_BG);
+
+            lblNama.setAlignmentX(Component.CENTER_ALIGNMENT);
+            lblHarga.setAlignmentX(Component.CENTER_ALIGNMENT);
+            lblStok.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            infoPanel.add(lblNama);
+            infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+            infoPanel.add(lblHarga);
+            infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+            infoPanel.add(lblStok);
 
             card.add(img, BorderLayout.CENTER);
-            card.add(text, BorderLayout.SOUTH);
+            card.add(infoPanel, BorderLayout.SOUTH);
 
             if (i % 2 == 0) {
                 homePanelTop.add(card);
@@ -262,8 +425,8 @@ public class AppTest {
             }
         }
 
-        homePanelTop.setPreferredSize(new Dimension(topCount * 170, 220));
-        homePanelBottom.setPreferredSize(new Dimension(bottomCount * 170, 220));
+        homePanelTop.setPreferredSize(new Dimension(topCount * 180, 240));
+        homePanelBottom.setPreferredSize(new Dimension(bottomCount * 180, 240));
 
         homePanelTop.revalidate();
         homePanelBottom.revalidate();
@@ -271,9 +434,10 @@ public class AppTest {
         homePanelBottom.repaint();
     }
 
-    /* ================= KATALOG (GRID CARD + JUMLAH) ================= */
+    /* ================= KATALOG (MODERN) ================= */
     private static JPanel createKatalogPage() {
         katalogPanel = new JPanel(new BorderLayout());
+        katalogPanel.setBackground(BG_COLOR);
         refreshKatalog();
         return katalogPanel;
     }
@@ -281,18 +445,21 @@ public class AppTest {
     static JTextField txtSearch;
     static String keywordSearch = "";
 
-
     private static void refreshKatalog() {
         katalogPanel.removeAll();
 
-        /* ================= SEARCH BAR ================= */
-        JPanel topFilter = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        /* ================= MODERN SEARCH BAR ================= */
+        JPanel topFilter = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        topFilter.setBackground(Color.WHITE);
+        topFilter.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(224, 224, 224)));
 
-        txtSearch = new JTextField(12);
-        JButton btnCari = new JButton("Cari");
-        JButton btnReset = new JButton("Reset");
+        txtSearch = new JTextField(15);
+        txtSearch.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
-        topFilter.add(new JLabel("Cari Barang:"));
+        JButton btnCari = createModernButton("🔍 Cari", PRIMARY_COLOR);
+        JButton btnReset = createModernButton("🔄 Reset", new Color(120, 120, 120));
+
+        topFilter.add(new JLabel("🔎"));
         topFilter.add(txtSearch);
         topFilter.add(btnCari);
         topFilter.add(btnReset);
@@ -300,16 +467,15 @@ public class AppTest {
         katalogPanel.add(topFilter, BorderLayout.NORTH);
 
         /* ================= GRID ================= */
-        JPanel grid = new JPanel(new GridLayout(0, 2, 10, 10));
-        grid.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel grid = new JPanel(new GridLayout(0, 2, 15, 15));
+        grid.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        grid.setBackground(BG_COLOR);
 
         boolean ditemukan = false;
 
         for (int i = 0; i < katalogModel.getRowCount(); i++) {
-
             String nama = katalogModel.getValueAt(i, 1).toString().toLowerCase();
 
-            // FILTER SEARCH
             if (!keywordSearch.isEmpty() && !nama.contains(keywordSearch)) {
                 continue;
             }
@@ -322,38 +488,44 @@ public class AppTest {
             int stok = (int) katalogModel.getValueAt(i, 3);
             ImageIcon img = (ImageIcon) katalogModel.getValueAt(i, 4);
 
-            JPanel card = new JPanel(new BorderLayout());
-            card.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            // 🎨 MODERN PRODUCT CARD
+            JPanel card = new JPanel(new BorderLayout(5, 5));
+            card.setBackground(CARD_BG);
+            card.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(224, 224, 224), 1),
+                    BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            ));
 
             JLabel lblImg = new JLabel(img, SwingConstants.CENTER);
             lblImg.setPreferredSize(new Dimension(150, 120));
 
-            JLabel lblInfo = new JLabel("<html><b>" + nama + "</b><br>Rp " +
-                    harga + "<br>Stok: " + stok + "</html>");
+            JLabel lblInfo = new JLabel("<html><b style='font-size:11px;'>" + nama +
+                    "</b><br><span style='color:#FF9800; font-size:12px;'>Rp " + harga +
+                    "</span><br><span style='font-size:10px; color:" +
+                    (stok > 0 ? "#4CAF50" : "#F44336") + ";'>Stok: " + stok +
+                    "</span></html>");
+            lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
 
-            JSpinner qty = new JSpinner(
-                    new SpinnerNumberModel(1, 1, Math.max(1, stok), 1)
-            );
+            JSpinner qty = new JSpinner(new SpinnerNumberModel(1, 1, Math.max(1, stok), 1));
             qty.setEnabled(stok > 0);
+            qty.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
-            JButton btnCart = new JButton("+ Keranjang");
+            JButton btnCart = createModernButton("🛒 Tambah", SUCCESS_COLOR);
             btnCart.setEnabled(stok > 0);
+            btnCart.setPreferredSize(new Dimension(120, 30));
 
             btnCart.addActionListener(e -> {
-
                 if (!isLogin) {
                     JOptionPane.showMessageDialog(null,
-                            "Silakan login sebagai USER terlebih dahulu",
-                            "Belum Login",
-                            JOptionPane.WARNING_MESSAGE);
+                            "⚠️ Silakan login sebagai USER terlebih dahulu",
+                            "Belum Login", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
                 if (isAdmin) {
                     JOptionPane.showMessageDialog(null,
-                            "Admin tidak diperbolehkan berbelanja",
-                            "Akses Ditolak",
-                            JOptionPane.ERROR_MESSAGE);
+                            "❌ Admin tidak diperbolehkan berbelanja",
+                            "Akses Ditolak", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -370,7 +542,8 @@ public class AppTest {
                 saveKatalogToJson();
             });
 
-            JPanel bottom = new JPanel(new GridLayout(2, 1));
+            JPanel bottom = new JPanel(new GridLayout(2, 1, 5, 5));
+            bottom.setOpaque(false);
             bottom.add(qty);
             bottom.add(btnCart);
 
@@ -381,19 +554,17 @@ public class AppTest {
             grid.add(card);
         }
 
-        // JIKA TIDAK DITEMUKAN
         if (!keywordSearch.isEmpty() && !ditemukan) {
             JOptionPane.showMessageDialog(null,
-                    "Barang tidak tersedia",
-                    "Pencarian",
+                    "😔 Barang tidak ditemukan", "Pencarian",
                     JOptionPane.INFORMATION_MESSAGE);
         }
 
         JScrollPane scroll = new JScrollPane(grid);
         scroll.setBorder(null);
+        scroll.getViewport().setBackground(BG_COLOR);
         katalogPanel.add(scroll, BorderLayout.CENTER);
 
-        /* ================= EVENT ================= */
         btnCari.addActionListener(e -> {
             keywordSearch = txtSearch.getText().trim().toLowerCase();
             refreshKatalog();
@@ -409,40 +580,54 @@ public class AppTest {
         katalogPanel.repaint();
     }
 
-    /* ================= KERANJANG ================= */
+    /* ================= KERANJANG (MODERN) ================= */
     private static JPanel createKeranjangPage() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(BG_COLOR);
 
         JTable table = new JTable(keranjangModel);
-        table.setRowHeight(80); // penting agar gambar terlihat
+        table.setRowHeight(90);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        table.getTableHeader().setBackground(PRIMARY_COLOR);
+        table.getTableHeader().setForeground(Color.BLACK);
+        table.setSelectionBackground(SECONDARY_COLOR);
 
-        // Renderer gambar
         table.getColumnModel().getColumn(4).setCellRenderer(new ImageRenderer());
+        table.getColumnModel().getColumn(0).setPreferredWidth(60);
+        table.getColumnModel().getColumn(1).setPreferredWidth(120);
+        table.getColumnModel().getColumn(2).setPreferredWidth(80);
+        table.getColumnModel().getColumn(3).setPreferredWidth(60);
+        table.getColumnModel().getColumn(4).setPreferredWidth(100);
 
-        // Lebar kolom
-        table.getColumnModel().getColumn(0).setPreferredWidth(60);  // Kode
-        table.getColumnModel().getColumn(1).setPreferredWidth(120); // Nama
-        table.getColumnModel().getColumn(2).setPreferredWidth(80);  // Harga
-        table.getColumnModel().getColumn(3).setPreferredWidth(60);  // Jumlah
-        table.getColumnModel().getColumn(4).setPreferredWidth(100); // Gambar
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(null);
+        panel.add(scroll, BorderLayout.CENTER);
 
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 15));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(224, 224, 224)));
 
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JButton bayar = createModernButton("💳 Bayar", SUCCESS_COLOR);
+        bayar.setPreferredSize(new Dimension(130, 40));
 
-        JButton bayar = new JButton("Bayar");
+        JButton hapus = createModernButton("🗑️ Hapus", DANGER_COLOR);
+        hapus.setPreferredSize(new Dimension(130, 40));
+
         bayar.addActionListener(e -> {
             int r = table.getSelectedRow();
             if (r >= 0) {
                 historyModel.addRow(new Object[]{
-                        keranjangModel.getValueAt(r, 1), "Selesai"
+                        keranjangModel.getValueAt(r, 1), "✅ Selesai"
                 });
                 keranjangModel.removeRow(r);
                 KeranjangStorage.save(keranjangModel);
+                JOptionPane.showMessageDialog(panel, "✅ Pembayaran berhasil!");
+            } else {
+                JOptionPane.showMessageDialog(panel, "⚠️ Pilih produk terlebih dahulu!");
             }
         });
 
-        JButton hapus = new JButton("Hapus");
         hapus.addActionListener(e -> {
             int r = table.getSelectedRow();
             if (r >= 0) {
@@ -459,10 +644,11 @@ public class AppTest {
 
                 keranjangModel.removeRow(r);
                 KeranjangStorage.save(keranjangModel);
-
                 refreshHome();
                 refreshKatalog();
                 saveKatalogToJson();
+            } else {
+                JOptionPane.showMessageDialog(panel, "⚠️ Pilih produk terlebih dahulu!");
             }
         });
 
@@ -473,18 +659,14 @@ public class AppTest {
         return panel;
     }
 
-
     static class ImageRenderer extends JLabel implements javax.swing.table.TableCellRenderer {
-
         public ImageRenderer() {
             setHorizontalAlignment(JLabel.CENTER);
         }
 
         @Override
-        public Component getTableCellRendererComponent(
-                JTable table, Object value, boolean isSelected,
-                boolean hasFocus, int row, int column) {
-
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                       boolean isSelected, boolean hasFocus, int row, int column) {
             if (value instanceof ImageIcon) {
                 setIcon((ImageIcon) value);
                 setText("");
@@ -492,28 +674,53 @@ public class AppTest {
                 setIcon(null);
                 setText("No Image");
             }
-
             return this;
         }
     }
 
-    /* ================= HISTORY ================= */
+    /* ================= HISTORY (MODERN) ================= */
     private static JScrollPane createHistoryPage() {
-        return new JScrollPane(new JTable(historyModel));
+        JTable table = new JTable(historyModel);
+        table.setRowHeight(40);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.getTableHeader().setBackground(PRIMARY_COLOR);
+        table.getTableHeader().setForeground(Color.WHITE);
+        table.setSelectionBackground(SECONDARY_COLOR);
+
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(null);
+        return scroll;
     }
 
-    /* ================= KELOLA ADMIN (CRUD) ================= */
+    /* ================= KELOLA (MODERN) ================= */
     private static JPanel createKelolaPage() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(BG_COLOR);
 
         JTable table = new JTable(katalogModel);
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        table.setRowHeight(35);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        table.getTableHeader().setBackground(PRIMARY_COLOR);
+        table.getTableHeader().setForeground(Color.WHITE);
+
+        JScrollPane tableScroll = new JScrollPane(table);
+        tableScroll.setBorder(null);
+        panel.add(tableScroll, BorderLayout.CENTER);
 
         JTextField kode = new JTextField();
         JTextField nama = new JTextField();
         JTextField harga = new JTextField();
         JTextField stok = new JTextField();
         final ImageIcon[] img = {null};
+
+        // Modern text field styling
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 13);
+        kode.setFont(fieldFont);
+        nama.setFont(fieldFont);
+        harga.setFont(fieldFont);
+        stok.setFont(fieldFont);
 
         table.getSelectionModel().addListSelectionListener(e -> {
             int r = table.getSelectedRow();
@@ -526,34 +733,34 @@ public class AppTest {
             }
         });
 
-        JButton upload = new JButton("Upload");
+        JButton upload = createModernButton("📁 Upload Gambar", SECONDARY_COLOR);
+        upload.setPreferredSize(new Dimension(150, 30));
+
         upload.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
             if (fc.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
                 String path = fc.getSelectedFile().getAbsolutePath();
-
-                ImageIcon icon = new ImageIcon(
-                        new ImageIcon(path)
-                                .getImage()
-                                .getScaledInstance(150, 120, Image.SCALE_SMOOTH)
-                );
-                icon.setDescription(path);
-
                 img[0] = resizeImage(path, 150, 120);
-
             }
         });
 
-        JPanel form = new JPanel(new GridLayout(5, 2));
-        form.add(new JLabel("Kode")); form.add(kode);
-        form.add(new JLabel("Nama")); form.add(nama);
-        form.add(new JLabel("Harga")); form.add(harga);
-        form.add(new JLabel("Stok")); form.add(stok);
-        form.add(new JLabel("Gambar")); form.add(upload);
+        JPanel form = new JPanel(new GridLayout(5, 2, 10, 10));
+        form.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        form.setBackground(Color.WHITE);
 
-        JButton add = new JButton("Input");
-        JButton update = new JButton("Update");
-        JButton delete = new JButton("Delete");
+        form.add(new JLabel("Kode:")); form.add(kode);
+        form.add(new JLabel("Nama:")); form.add(nama);
+        form.add(new JLabel("Harga:")); form.add(harga);
+        form.add(new JLabel("Stok:")); form.add(stok);
+        form.add(new JLabel("Gambar:")); form.add(upload);
+
+        JButton add = createModernButton("➕ Input", SUCCESS_COLOR);
+        JButton update = createModernButton("✏️ Update", ACCENT_COLOR);
+        JButton delete = createModernButton("🗑️ Delete", DANGER_COLOR);
+
+        add.setPreferredSize(new Dimension(110, 35));
+        update.setPreferredSize(new Dimension(110, 35));
+        delete.setPreferredSize(new Dimension(110, 35));
 
         add.addActionListener(e -> {
             try {
@@ -565,22 +772,18 @@ public class AppTest {
                 }
 
                 katalogModel.addRow(new Object[]{
-                        kode.getText(),
-                        nama.getText(),
-                        hargaText,   // SIMPAN STRING
-                        stokValue,
-                        img[0]
+                        kode.getText(), nama.getText(), hargaText, stokValue, img[0]
                 });
 
-                JOptionPane.showMessageDialog(panel, "Data berhasil ditambahkan");
+                refreshHome();
+                refreshKatalog();
+                saveKatalogToJson();
+                JOptionPane.showMessageDialog(panel, "✅ Data berhasil ditambahkan");
 
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(
-                        panel,
-                        "Harga dan stok HARUS angka!",
-                        "Input Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
+                JOptionPane.showMessageDialog(panel,
+                        "❌ Harga dan stok HARUS angka!", "Input Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -588,11 +791,9 @@ public class AppTest {
             int r = table.getSelectedRow();
             if (r >= 0) {
                 try {
-                    // STOK wajib angka
                     int stokValue = Integer.parseInt(stok.getText());
-
-                    // HARGA boleh angka + titik
                     String hargaText = harga.getText();
+
                     if (!hargaText.matches("^[0-9.]+$")) {
                         throw new NumberFormatException("Harga tidak valid");
                     }
@@ -606,33 +807,40 @@ public class AppTest {
                     refreshHome();
                     refreshKatalog();
                     saveKatalogToJson();
-
-                    JOptionPane.showMessageDialog(panel, "Data berhasil diupdate");
+                    JOptionPane.showMessageDialog(panel, "✅ Data berhasil diupdate");
 
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(
-                            panel,
-                            "Harga dan stok HARUS berupa ANGKA!",
-                            "Update Error",
-                            JOptionPane.ERROR_MESSAGE
-                    );
+                    JOptionPane.showMessageDialog(panel,
+                            "❌ Harga dan stok HARUS berupa ANGKA!", "Update Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             } else {
-                JOptionPane.showMessageDialog(panel, "Pilih data terlebih dahulu");
+                JOptionPane.showMessageDialog(panel, "⚠️ Pilih data terlebih dahulu");
             }
         });
 
         delete.addActionListener(e -> {
             int r = table.getSelectedRow();
             if (r >= 0) {
-                katalogModel.removeRow(r);
-                refreshHome();
-                saveKatalogToJson();
-                refreshKatalog();
+                int confirm = JOptionPane.showConfirmDialog(panel,
+                        "Yakin ingin menghapus data ini?", "Konfirmasi Hapus",
+                        JOptionPane.YES_NO_OPTION);
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    katalogModel.removeRow(r);
+                    refreshHome();
+                    refreshKatalog();
+                    saveKatalogToJson();
+                    JOptionPane.showMessageDialog(panel, "✅ Data berhasil dihapus");
+                }
+            } else {
+                JOptionPane.showMessageDialog(panel, "⚠️ Pilih data terlebih dahulu");
             }
         });
 
-        JPanel btn = new JPanel();
+        JPanel btn = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        btn.setBackground(Color.WHITE);
+        btn.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(224, 224, 224)));
         btn.add(add);
         btn.add(update);
         btn.add(delete);
@@ -642,7 +850,8 @@ public class AppTest {
 
         return panel;
     }
-    //===json===
+
+    /* ================= HELPER METHODS ================= */
     private static void saveKatalogToJson() {
         java.util.List<Produk> list = new java.util.ArrayList<>();
 
@@ -654,7 +863,7 @@ public class AppTest {
                     katalogModel.getValueAt(i, 1).toString(),
                     katalogModel.getValueAt(i, 2).toString(),
                     (int) katalogModel.getValueAt(i, 3),
-                    icon.getDescription() // path gambar
+                    icon.getDescription()
             ));
         }
 
@@ -663,15 +872,9 @@ public class AppTest {
 
     private static ImageIcon resizeImage(String path, int width, int height) {
         ImageIcon icon = new ImageIcon(path);
-        Image img = icon.getImage().getScaledInstance(
-                width, height, Image.SCALE_SMOOTH
-        );
+        Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
         ImageIcon resized = new ImageIcon(img);
-        resized.setDescription(path); // penting buat JSON
+        resized.setDescription(path);
         return resized;
     }
-
-
-
-
 }
